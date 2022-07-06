@@ -7,15 +7,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Praktika", "Praktika", "{64
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{21848681-8C97-4853-A4F4-9C2418C50AA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGL", "OpenGL\OpenGL.csproj", "{4A3D3106-AFEC-4E04-9630-7A1A2D0C16DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenGL", "OpenGL\OpenGL.csproj", "{4A3D3106-AFEC-4E04-9630-7A1A2D0C16DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGL.Platform", "OpenGL.Platform\OpenGL.Platform.csproj", "{32EDDFDA-D6CA-4459-AFF0-6170280B824F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenGL.Platform", "OpenGL.Platform\OpenGL.Platform.csproj", "{32EDDFDA-D6CA-4459-AFF0-6170280B824F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenGL.Game", "OpenGL.Game\OpenGL.Game.csproj", "{6BCA95AD-2878-46C4-8C75-24BA51B2E190}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGLEngine", "OpenGLEngine\OpenGLEngine.csproj", "{9DB6DC68-94D6-46E9-8D8C-290DDD5EEC35}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenGLEngine", "OpenGLEngine\OpenGLEngine.csproj", "{9DB6DC68-94D6-46E9-8D8C-290DDD5EEC35}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGL.UI", "gui4opengl\OpenGL.UI.csproj", "{87396D4A-144F-402E-AC9A-42205B8A3312}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenGL.UI", "gui4opengl\OpenGL.UI.csproj", "{87396D4A-144F-402E-AC9A-42205B8A3312}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

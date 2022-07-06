@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
@@ -11,12 +11,6 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\gui4opengl\OpenGL.UI.csproj" />
-    <ProjectReference Include="..\OpenGL.Game\OpenGL.Game.csproj" />
-    <ProjectReference Include="..\OpenGL.Platform\OpenGL.Platform.csproj" />
-    <ProjectReference Include="..\OpenGL\OpenGL.csproj" />
-  </ItemGroup>
   <PropertyGroup />
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.3.330701">
@@ -24,4 +18,22 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\gui4opengl\OpenGL.UI.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenGL.Game\OpenGL.Game.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenGL.Platform\OpenGL.Platform.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenGL\OpenGL.csproj">
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <Private>true</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy $(SolutionDir)libs\SDL2.dll $(OutDir)&#xA;&#xD;&#xA;robocopy $(ProjectDir)\resources $(OutDir)\resources /e /is /purge || set errorlevel = 0&#xD;&#xA;&#xD;&#xA;&#xA;" />
+  </Target>
 </Project>

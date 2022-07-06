@@ -15,11 +15,13 @@
     <LangVersion>7.3</LangVersion>
     <Version>0.2.1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1</AssemblyVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="OpenGL.dll.config"></Content>
+    <Content Include="OpenGL.dll.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
     <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0"></PackageReference>
     <PackageReference Include="System.Memory" Version="4.5.4"></PackageReference>
@@ -31,7 +33,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\netstandard1.4\OpenGL.xml</DocumentationFile>
-    <DefineConstants>RELEASE;USE_NUMERICS</DefineConstants>
+    <DefineConstants>RELEASE</DefineConstants>
     <NoWarn>1701;1702;1591</NoWarn>
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>

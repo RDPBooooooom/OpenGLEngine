@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using OpenGL;
 using OpenGL.Game;
 using OpenGL.Platform;
@@ -11,9 +12,12 @@ namespace OpenGLEngine
         private static int width = 800;
         private static int height = 600;
 
-        //TODO: Create game instance
         private static Game game;
         private static Camera camera;
+
+        private const string ResourcesPath = "resources\\";
+        private const string TexturePath = ResourcesPath + "textures\\";
+        private const string ShaderPath = ResourcesPath + "shaders\\";
 
         static void Main()
         {
@@ -34,22 +38,24 @@ namespace OpenGLEngine
             Gl.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
             //Load texture files
-            Gl.ActiveTexture(1);
-            Texture crateTexture = new Texture("..\\textures\\crate.jpg");
+            Texture crateTexture = new Texture( TexturePath + "crate.jpg");
+            Gl.ActiveTexture((int) crateTexture.TextureID);
             Gl.BindTexture(crateTexture);
+            
+            Texture brickTexture = new Texture(TexturePath + "brick.jpg");
+            Gl.ActiveTexture((int) brickTexture.TextureID);
+            Gl.BindTexture(brickTexture);
 
             // Load shader files
             ShaderProgram material =
-                new ShaderProgram(ShaderUtil.CreateShader("..\\shaders\\vert_old.vs", ShaderType.VertexShader),
-                    ShaderUtil.CreateShader("..\\shaders\\frag_old.fs", ShaderType.FragmentShader));
+                new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "vert_old.vs", ShaderType.VertexShader),
+                    ShaderUtil.CreateShader(ShaderPath + "frag_old.fs", ShaderType.FragmentShader));
             material["color"].SetValue(new Vector3(1, 1, 1));
 
-            ShaderProgram textureMaterial =  new ShaderProgram(ShaderUtil.CreateShader("..\\shaders\\vert.vs", ShaderType.VertexShader),
-                ShaderUtil.CreateShader("..\\shaders\\frag.fs", ShaderType.FragmentShader));
+            ShaderProgram textureMaterial =  new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "vert.vs", ShaderType.VertexShader),
+                ShaderUtil.CreateShader(ShaderPath + "frag.fs", ShaderType.FragmentShader));
             textureMaterial["color"].SetValue(new Vector3(1, 1, 1));
-            textureMaterial["baseColorMap"].SetValue(1);
-            
-            
+
             SwapPolygonModeFill();
 
             //Create game object
@@ -71,7 +77,7 @@ namespace OpenGLEngine
                 }
             };
             
-            Cube cube2 = new Cube("myCube2", textureMaterial, crateTexture)
+            Cube cube2 = new Cube("myCube2", textureMaterial, brickTexture)
             {
                 Transform = new Transform()
                 {
@@ -118,12 +124,10 @@ namespace OpenGLEngine
             }
         }
 
-
         #region Transformation
 
         private static void Render(GameObject obj, Matrix4 view, Matrix4 projection)
         {
-
             //--------------------------
             // Data passing to shader
             //--------------------------
@@ -166,8 +170,8 @@ namespace OpenGLEngine
         private static void OnClose()
         {
             // make sure to dispose of everything
-            global::OpenGL.UI.UserInterface.Dispose();
-            global::OpenGL.UI.BMFont.Dispose();
+            //global::OpenGL.UI.UserInterface.Dispose();
+            //global::OpenGL.UI.BMFont.Dispose();
         }
 
         private static void OnPreRenderFrame()

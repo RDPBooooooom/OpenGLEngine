@@ -37,6 +37,13 @@ namespace OpenGL.Game
         public void Render(Matrix4 model, Matrix4 view, Matrix4 projection)
         {
             Geometry.Program.Use();
+            if (Texture != null)
+            {
+                Gl.ActiveTexture((int)Texture.TextureID);
+                Gl.BindTexture(Texture);
+                Material["baseColorMap"]?.SetValue((int) Texture.TextureID);
+            }
+            
             Material["projection"].SetValue(projection);
             Material["view"].SetValue(view);
             Material["model"].SetValue(model);

@@ -5,20 +5,22 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenGL">
-      <HintPath>..\libs\OpenGL.dll</HintPath>
-    </Reference>
-    <Reference Include="OpenGL.Platform">
-      <HintPath>..\libs\OpenGL.Platform.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.3.330701">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OpenGL.Platform\OpenGL.Platform.csproj" />
-    <ProjectReference Include="..\OpenGL\OpenGL.csproj" />
+    <ProjectReference Include="..\OpenGL.Platform\OpenGL.Platform.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenGL\OpenGL.csproj">
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <Private>true</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\AssemblyInfo.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 </Project>
