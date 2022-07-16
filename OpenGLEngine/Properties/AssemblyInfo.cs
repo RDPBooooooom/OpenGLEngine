@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("OpenGlEngine")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Little Application")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Example1")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCompany("NoCompany")]
+[assembly: AssemblyProduct("OpenGLEngine")]
+[assembly: AssemblyCopyright("No Copyright")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("5792f514-49ae-4a38-88a1-d72c28ae6834")]
+[assembly: Guid("9263c531-b720-41c1-8087-8bc76a03c18d")]
 
 // Version information for an assembly consists of the following four values:
 //

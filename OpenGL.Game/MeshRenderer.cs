@@ -48,6 +48,8 @@ namespace OpenGL.Game
             Material["view"].SetValue(view);
             Material["model"].SetValue(model);
             Geometry.Draw();
+
+            if (Texture != null) Gl.BindTexture(Texture.TextureTarget, 0);
         }
 
         #endregion

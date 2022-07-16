@@ -1,10 +1,9 @@
-﻿using System;
-using OpenGL;
+﻿using OpenGL;
 using OpenGL.Game;
 using OpenGL.Game.Shapes;
 using OpenGL.Platform;
 
-namespace SAE.OpenGL.P6
+namespace OpenGLEngine
 {
     public class Cube : GameObject
     {
@@ -14,28 +13,24 @@ namespace SAE.OpenGL.P6
         private float _lastTime;
         private float _timeSinceStart;
 
-        public Cube(string name, ShaderProgram mat) : base(name)
+        public Cube(string name, ShaderProgram mat) : base(name, new MeshRenderer(mat,
+            GetVao(Shapes.VerticesTextureCube, Shapes.IndicesTextureCube, Shapes.ColorsTextureCube,
+                Shapes.UvTextureCube, mat)))
         {
             _uvFactor = 1;
 
             _mat = mat;
-
-            Renderer = new MeshRenderer(_mat,
-                GetVao(Shapes.VerticesTextureCube, Shapes.IndicesTextureCube, Shapes.ColorsTextureCube,
-                    Shapes.UvTextureCube, _mat));
         }
         
-        public Cube(string name, ShaderProgram mat, Texture texture) : base(name)
+        public Cube(string name, ShaderProgram mat, Texture texture) : base(name, new MeshRenderer(mat, texture,
+            GetVao(Shapes.VerticesTextureCube, Shapes.IndicesTextureCube, Shapes.ColorsTextureCube,
+                Shapes.UvTextureCube, mat)))
         {
             _uvFactor = 1;
 
             _mat = mat;
-            _mat["uv_factor"].SetValue(_uvFactor);
-
-            Renderer = new MeshRenderer(_mat, texture,
-                GetVao(Shapes.VerticesTextureCube, Shapes.IndicesTextureCube, Shapes.ColorsTextureCube,
-                    Shapes.UvTextureCube, _mat));
-
+            _mat["uv_factor"]?.SetValue(_uvFactor);
+            
             Input.Subscribe('m', UvSizeUp);
             Input.Subscribe('n', UvSizeDown);
         }
@@ -53,7 +48,7 @@ namespace SAE.OpenGL.P6
 
             _mat.Use();
             _uvFactor++;
-            _mat["uv_factor"].SetValue(_uvFactor);
+            _mat["uv_factor"]?.SetValue(_uvFactor);
         }
 
         private void UvSizeDown()
@@ -64,7 +59,7 @@ namespace SAE.OpenGL.P6
 
             _mat.Use();
             _uvFactor--;
-            _mat["uv_factor"].SetValue(_uvFactor);
+            _mat["uv_factor"]?.SetValue(_uvFactor);
         }
     }
 }

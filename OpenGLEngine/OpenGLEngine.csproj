@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
@@ -34,6 +34,6 @@
     </ProjectReference>
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(SolutionDir)libs\SDL2.dll $(OutDir)&#xA;&#xD;&#xA;robocopy $(ProjectDir)\resources $(OutDir)\resources /e /is /purge || set errorlevel = 0&#xD;&#xA;&#xD;&#xA;&#xA;" />
+    <Exec Command="copy $(SolutionDir)libs\SDL2.dll $(OutDir)&#xA;rmdir $(ProjectDir)\resources&#xA;robocopy $(ProjectDir)\resources $(OutDir)\resources /e /is /it /im /purge || set errorlevel = 0&#xA;&#xA;&#xA;" />
   </Target>
 </Project>

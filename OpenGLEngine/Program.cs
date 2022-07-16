@@ -2,8 +2,8 @@
 using System.Windows.Forms;
 using OpenGL;
 using OpenGL.Game;
+using OpenGL.Game.ObjParser;
 using OpenGL.Platform;
-using SAE.OpenGL.P6;
 
 namespace OpenGLEngine
 {
@@ -15,14 +15,18 @@ namespace OpenGLEngine
         private static Game game;
         private static Camera camera;
 
+        private static ObjParser parser;
+
         private const string ResourcesPath = "resources\\";
         private const string TexturePath = ResourcesPath + "textures\\";
         private const string ShaderPath = ResourcesPath + "shaders\\";
+        private const string ObjPath = ResourcesPath + "obj\\";
 
         static void Main()
         {
             game = new Game();
             camera = new Camera();
+            parser = new ObjParser();
 
             Time.Init();
             Window.CreateWindow("OpenGLEngine Alpha Alpha", 800, 600);
@@ -46,29 +50,28 @@ namespace OpenGLEngine
             Gl.ActiveTexture((int) brickTexture.TextureID);
             Gl.BindTexture(brickTexture);
 
-            // Load shader files
-            ShaderProgram material =
-                new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "vert_old.vs", ShaderType.VertexShader),
-                    ShaderUtil.CreateShader(ShaderPath + "frag_old.fs", ShaderType.FragmentShader));
-            material["color"].SetValue(new Vector3(1, 1, 1));
-
-            ShaderProgram textureMaterial =  new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "vert.vs", ShaderType.VertexShader),
-                ShaderUtil.CreateShader(ShaderPath + "frag.fs", ShaderType.FragmentShader));
-            textureMaterial["color"].SetValue(new Vector3(1, 1, 1));
-
+            ShaderProgram objMaterial =
+                new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "ObjVert.vs", ShaderType.VertexShader),
+                    ShaderUtil.CreateShader(ShaderPath + "ObjFrag.fs", ShaderType.FragmentShader));
+            objMaterial["color"].SetValue(new Vector3(1, 1, 1));
+            
+            ShaderProgram objNoTextureMaterial =
+                new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "\\NoTexture\\ObjVert.vs", ShaderType.VertexShader),
+                    ShaderUtil.CreateShader(ShaderPath + "\\NoTexture\\ObjFrag.fs", ShaderType.FragmentShader));
+            objMaterial["color"].SetValue(new Vector3(1, 1, 1));
+            
             SwapPolygonModeFill();
 
             //Create game object
 
-            DynamicShape obj = new DynamicShape("DynShape", material)
-            {
-                Transform = new Transform()
-                {
-                    Position = new Vector3(5, 0, -10f)
-                }
-            };
+            GameObject parsed = parser.ParseToGameObject(ObjPath, "cube.obj", objNoTextureMaterial);
+            GameObject parsed3 = parser.ParseToGameObject(ObjPath + "Complex\\", "Head_1.obj", objNoTextureMaterial);
+            GameObject parsed2 = parser.ParseToGameObject(ObjPath + "Plane\\", "Plane.obj", objMaterial);
+            parsed2.Transform.Position = new Vector3(5, 0, -1);
+            parsed3.Transform.Position = new Vector3(-5, 0, 0);
             
-            Cube cube = new Cube("myCube", textureMaterial, crateTexture)
+            //complexParse.Transform.Position = new Vector3(-5, 0, -1);
+            Cube cube = new Cube("myCube", objMaterial, crateTexture)
             {
                 Transform = new Transform()
                 {
@@ -77,7 +80,7 @@ namespace OpenGLEngine
                 }
             };
             
-            Cube cube2 = new Cube("myCube2", textureMaterial, brickTexture)
+            Cube cube2 = new Cube("myCube2", objMaterial, brickTexture)
             {
                 Transform = new Transform()
                 {
@@ -90,7 +93,9 @@ namespace OpenGLEngine
             //Add to scene
             game.SceneGraph.Add(cube);
             game.SceneGraph.Add(cube2);
-            game.SceneGraph.Add(obj);
+            game.SceneGraph.Add(parsed);
+            game.SceneGraph.Add(parsed2);
+            game.SceneGraph.Add(parsed3);
 
             // Hook to the escape press event using the OpenGL.UI class library
             Input.Subscribe((char) Keys.Escape, Window.OnClose);
