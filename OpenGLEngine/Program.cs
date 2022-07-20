@@ -20,7 +20,7 @@ namespace OpenGLEngine
         private const string ResourcesPath = "resources\\";
         private const string TexturePath = ResourcesPath + "textures\\";
         private const string ShaderPath = ResourcesPath + "shaders\\";
-        private const string ObjPath = ResourcesPath + "obj\\";
+        private const string ObjPath = ResourcesPath + "wavefront\\";
 
         static void Main()
         {
@@ -67,6 +67,9 @@ namespace OpenGLEngine
             GameObject parsed = parser.ParseToGameObject(ObjPath, "cube.obj", objNoTextureMaterial);
             GameObject parsed3 = parser.ParseToGameObject(ObjPath + "Complex\\", "Head_1.obj", objNoTextureMaterial);
             GameObject parsed2 = parser.ParseToGameObject(ObjPath + "Plane\\", "Plane.obj", objMaterial);
+            
+            //GameObject multiple = parser.ParseToGameObject(ObjPath + "Multiple\\", "Head_1_multiple_object.obj", objMaterial);
+            
             parsed2.Transform.Position = new Vector3(5, 0, -1);
             parsed3.Transform.Position = new Vector3(-5, 0, 0);
             

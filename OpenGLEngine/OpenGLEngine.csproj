@@ -34,6 +34,6 @@
     </ProjectReference>
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(SolutionDir)libs\SDL2.dll $(OutDir)&#xA;rmdir $(ProjectDir)\resources&#xA;robocopy $(ProjectDir)\resources $(OutDir)\resources /e /is /it /im /purge || set errorlevel = 0&#xA;&#xA;&#xA;" />
+    <Exec Command="copy $(SolutionDir)libs\SDL2.dll $(OutDir)&#xA;rmdir /s /q $(OutDir)\resources &#xA;robocopy $(ProjectDir)\resources $(OutDir)\resources /e /is /it /im /purge || set errorlevel = 0&#xA;&#xA;&#xA;" />
   </Target>
 </Project>
