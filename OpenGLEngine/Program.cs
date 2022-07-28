@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using OpenGL;
 using OpenGL.Game;
-using OpenGL.Game.ObjParser;
+using OpenGL.Game.Components.BasicComponents;
+using OpenGL.Game.GameObjectFactories;
+using OpenGL.Game.Utils;
+using OpenGL.Game.WavefrontParser;
 using OpenGL.Platform;
 
 namespace OpenGLEngine
@@ -15,8 +19,6 @@ namespace OpenGLEngine
         private static Game game;
         private static Camera camera;
 
-        private static ObjParser parser;
-
         private const string ResourcesPath = "resources\\";
         private const string TexturePath = ResourcesPath + "textures\\";
         private const string ShaderPath = ResourcesPath + "shaders\\";
@@ -24,12 +26,21 @@ namespace OpenGLEngine
 
         static void Main()
         {
-            game = new Game();
-            camera = new Camera();
-            parser = new ObjParser();
+            camera = new Camera
+            {
+                ScreenWidth = width,
+                ScreenHeight = height
+            };
+            DirectionalLight dirLight = new DirectionalLight(new Vector3(0, 0, -1), new Vector3(1, 1, 1) * 0.2f,
+                new Vector3(1, 1, 1) * 2, new Vector3(1, 1, 1) * 4);
+
+            game = Game.Instance;
+            game.CurrentProjection = GetProjectionMatrix;
+            game.CurrentCamera = camera;
+            game.CurrentDirLight = dirLight;
 
             Time.Init();
-            Window.CreateWindow("OpenGLEngine Alpha Alpha", 800, 600);
+            Window.CreateWindow("OpenGLEngine Alpha Alpha", width, height);
 
             // add a reshape callback to update the UI
             Window.OnReshapeCallbacks.Add(OnResize);
@@ -41,65 +52,98 @@ namespace OpenGLEngine
             Gl.Enable(EnableCap.DepthTest);
             Gl.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
+            Gl.Enable(EnableCap.TextureCubeMapSeamless);
+
             //Load texture files
-            Texture crateTexture = new Texture( TexturePath + "crate.jpg");
-            Gl.ActiveTexture((int) crateTexture.TextureID);
+            Texture crateTexture = new Texture(TexturePath + "crate.jpg");
+            Gl.ActiveTexture(0);
             Gl.BindTexture(crateTexture);
-            
+
             Texture brickTexture = new Texture(TexturePath + "brick.jpg");
-            Gl.ActiveTexture((int) brickTexture.TextureID);
+            Gl.ActiveTexture(0);
             Gl.BindTexture(brickTexture);
+
+            string[] skyboxTexture =
+            {
+                TexturePath + "skybox\\Left.png",
+                TexturePath + "skybox\\Right.png",
+                TexturePath + "skybox\\Up.png",
+                TexturePath + "skybox\\Down.png",
+                TexturePath + "skybox\\Front.png",
+                TexturePath + "skybox\\Back.png",
+            };
+            CubeMapTexture cmt = new CubeMapTexture(skyboxTexture);
+
+            ShaderProgram skyboxMat =
+                new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "SkyboxVert.vs", ShaderType.VertexShader),
+                    ShaderUtil.CreateShader(ShaderPath + "SkyboxFrag.fs", ShaderType.FragmentShader));
 
             ShaderProgram objMaterial =
                 new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "ObjVert.vs", ShaderType.VertexShader),
                     ShaderUtil.CreateShader(ShaderPath + "ObjFrag.fs", ShaderType.FragmentShader));
-            objMaterial["color"].SetValue(new Vector3(1, 1, 1));
-            
-            ShaderProgram objNoTextureMaterial =
+            objMaterial["color"]?.SetValue(new Vector3(1, 1, 1));
+
+            /*ShaderProgram objNoTextureMaterial =
                 new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "\\NoTexture\\ObjVert.vs", ShaderType.VertexShader),
                     ShaderUtil.CreateShader(ShaderPath + "\\NoTexture\\ObjFrag.fs", ShaderType.FragmentShader));
-            objMaterial["color"].SetValue(new Vector3(1, 1, 1));
-            
+            objMaterial["color"]?.SetValue(new Vector3(1, 1, 1));
+            */
             SwapPolygonModeFill();
 
             //Create game object
 
-            GameObject parsed = parser.ParseToGameObject(ObjPath, "cube.obj", objNoTextureMaterial);
-            GameObject parsed3 = parser.ParseToGameObject(ObjPath + "Complex\\", "Head_1.obj", objNoTextureMaterial);
-            GameObject parsed2 = parser.ParseToGameObject(ObjPath + "Plane\\", "Plane.obj", objMaterial);
-            
-            //GameObject multiple = parser.ParseToGameObject(ObjPath + "Multiple\\", "Head_1_multiple_object.obj", objMaterial);
-            
-            parsed2.Transform.Position = new Vector3(5, 0, -1);
-            parsed3.Transform.Position = new Vector3(-5, 0, 0);
-            
-            //complexParse.Transform.Position = new Vector3(-5, 0, -1);
-            Cube cube = new Cube("myCube", objMaterial, crateTexture)
-            {
-                Transform = new Transform()
-                {
-                    Position = new Vector3(0, 0, -10f),
-                    Rotation = new Vector3(0, 0, 45)
-                }
-            };
-            
-            Cube cube2 = new Cube("myCube2", objMaterial, brickTexture)
-            {
-                Transform = new Transform()
-                {
-                    Position = new Vector3(-5, 0, -10f),
-                    Scale = new Vector3(2,2,2),
-                    Rotation = new Vector3(30, 30, 30)
-                }
-            };
+            Skybox box = new Skybox(cmt, skyboxMat);
+            game.Skybox = box;
 
-            //Add to scene
-            game.SceneGraph.Add(cube);
-            game.SceneGraph.Add(cube2);
-            game.SceneGraph.Add(parsed);
-            game.SceneGraph.Add(parsed2);
-            game.SceneGraph.Add(parsed3);
+            CubeGameObjectFactory cubeFactory = new CubeGameObjectFactory();
+            Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
+            Guid obj2 = cubeFactory.Create(objMaterial, crateTexture);
 
+            WavefrontFactory wavefrontFactory = new WavefrontFactory(ObjPath, "cube.obj");
+            //Guid objTest1 = wavefrontFactory.Create(objNoTextureMaterial, null);
+
+            wavefrontFactory.ChangePath(ObjPath + "Complex\\", "Head_1.obj");
+            //Guid objTest2 = wavefrontFactory.Create(objNoTextureMaterial, null);
+
+            wavefrontFactory.ChangePath(ObjPath + "Plane\\", "Plane.obj");
+            Guid objTest3 = wavefrontFactory.Create(objMaterial, null);
+
+            game.FindComponent<TransformComponent>(obj2).Position = new Vector3(0f, 0, -10);
+            game.FindComponent<TransformComponent>(obj1).Position = new Vector3(-5f, 0, -10);
+            game.FindComponent<TransformComponent>(obj1).Rotation = new Vector3(0, 0, 45);
+            game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(2, 2, 2);
+            //game.FindComponent<TransformComponent>(objTest2).Position = new Vector3(-5f, 5, -10);
+            game.FindComponent<TransformComponent>(objTest3).Position = new Vector3(-20f, 0, -10);
+
+            for (int i = 0; i < 100; i++)
+            {
+                for (int u = 0; u < 10; u++)
+                {
+                    Guid id = cubeFactory.Create(objMaterial, crateTexture);
+                    game.FindComponent<TransformComponent>(id).Position = new Vector3(u * 2f, i + 2, -10f);
+                }
+            }
+
+            Random random = new Random();
+            for (int i = 0; i < 20; i++)
+            {
+                for (int j = 0; j < 5; j++)
+                {
+                    // Add PointLights to scene
+                    PointLightFactory pointLightFactory = new PointLightFactory();
+                    Guid pointLight = pointLightFactory.Create(null, null);
+                    game.FindComponent<TransformComponent>(pointLight).Position = new Vector3(4f * j, 12f * i, -8);
+                    Vector3 ranColor = new Vector3((float) random.NextDouble(), (float) random.NextDouble(),
+                        (float) random.NextDouble());
+                    PointLightComponent c = game.FindComponent<PointLightComponent>(pointLight);
+                    LightData data = c.LightData;
+                    data.AmbientColor = ranColor;
+                    data.DiffuseColor = ranColor;
+                    data.SpecularColor = ranColor;
+                    c.LightData = data;
+                }
+            }
+            
             // Hook to the escape press event using the OpenGL.UI class library
             Input.Subscribe((char) Keys.Escape, Window.OnClose);
 
@@ -110,6 +154,10 @@ namespace OpenGLEngine
             Window.OnMouseCallbacks.Add(global::OpenGL.UI.UserInterface.OnMouseClick);
             Window.OnMouseMoveCallbacks.Add(global::OpenGL.UI.UserInterface.OnMouseMove);
 
+            int frames = 0;
+            float time = 0;
+            float lastTime = 0;
+            
             // Game loop
             while (Window.Open)
             {
@@ -119,28 +167,26 @@ namespace OpenGLEngine
 
                 Input.Update();
 
+                game.Start();
                 game.Update();
-
-                Matrix4 view = camera.Transform.GetRts();
-                Matrix4 projection = GetProjectionMatrix();
-
-                game.SceneGraph.ForEach(g => Render(g, view, projection));
+                game.Render();
 
                 OnPostRenderFrame();
 
                 Time.Update();
+                
+                frames++;
+                time += Time.DeltaTime;
+                if (time - lastTime > 1)
+                {
+                    Console.WriteLine(1000.0d/frames);
+                    frames = 0;
+                    lastTime++;
+                }
             }
         }
 
         #region Transformation
-
-        private static void Render(GameObject obj, Matrix4 view, Matrix4 projection)
-        {
-            //--------------------------
-            // Data passing to shader
-            //--------------------------
-            obj.Render(view, projection);
-        }
 
         private static Matrix4 GetProjectionMatrix()
         {
@@ -171,6 +217,9 @@ namespace OpenGLEngine
         {
             width = Window.Width;
             height = Window.Height;
+
+            camera.ScreenWidth = width;
+            camera.ScreenHeight = height;
 
             global::OpenGL.UI.UserInterface.OnResize(Window.Width, Window.Height);
         }

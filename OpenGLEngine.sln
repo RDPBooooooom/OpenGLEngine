@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenGLEngine", "OpenGLEngin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenGL.UI", "gui4opengl\OpenGL.UI.csproj", "{87396D4A-144F-402E-AC9A-42205B8A3312}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGL.Game.Tests", "OpenGL.Game.Tests\OpenGL.Game.Tests.csproj", "{B2DFA0A4-CBBD-4938-97AC-8ACE9A603B72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{87396D4A-144F-402E-AC9A-42205B8A3312}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87396D4A-144F-402E-AC9A-42205B8A3312}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87396D4A-144F-402E-AC9A-42205B8A3312}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2DFA0A4-CBBD-4938-97AC-8ACE9A603B72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2DFA0A4-CBBD-4938-97AC-8ACE9A603B72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2DFA0A4-CBBD-4938-97AC-8ACE9A603B72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2DFA0A4-CBBD-4938-97AC-8ACE9A603B72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{6BCA95AD-2878-46C4-8C75-24BA51B2E190} = {21848681-8C97-4853-A4F4-9C2418C50AA8}
 		{9DB6DC68-94D6-46E9-8D8C-290DDD5EEC35} = {64724DEA-E024-46C1-AC71-85D96D3C0BFB}
 		{87396D4A-144F-402E-AC9A-42205B8A3312} = {21848681-8C97-4853-A4F4-9C2418C50AA8}
+		{B2DFA0A4-CBBD-4938-97AC-8ACE9A603B72} = {21848681-8C97-4853-A4F4-9C2418C50AA8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EA740FB3-3A04-4EF0-A390-D957FD6B6D5A}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using OpenGL.Game.Components.BasicComponents;
 using OpenGL.Platform;
 
 namespace OpenGL.Game
@@ -8,17 +9,20 @@ namespace OpenGL.Game
     {
         #region Properties
 
-        public Transform Transform { get; protected set; }
+        public TransformComponent Transform { get; protected set; }
         public float MoveStepDistance { get; set; } = 2;
-        public float RotationStepAngle { get; set; } = 60;
+        public float RotationStepAngle { get; set; } = 10;
 
+        public float ScreenWidth { get; set; }
+        public float ScreenHeight { get; set; }
+        
         #endregion
 
         #region Constructor
 
         public Camera()
         {
-            Transform = new Transform();
+            Transform = new TransformComponent(new Guid());
 
             InitActions();
         }
@@ -65,8 +69,13 @@ namespace OpenGL.Game
 
         public void Mouse(int lx, int ly, int x, int y)
         {
-            Rotate(new Vector3(RotationStepAngle * (ly - y), 0f, 0f) * Time.DeltaTime);
-            //Rotate(new Vector3(0f, RotationStepAngle * (lx - x), 0f) * Time.DeltaTime);
+            Rotate(new Vector3(RotationStepAngle * GetPercentRotation(ly - y, ScreenWidth), 0f, 0f) * Time.DeltaTime);
+            Rotate(new Vector3(0f, RotationStepAngle * GetPercentRotation(lx - x, ScreenHeight), 0f) * Time.DeltaTime);
+        }
+
+        private float GetPercentRotation(float distance, float totalDistance)
+        {
+            return totalDistance / 100 * distance;
         }
 
         public void MoveForward(float dt)
