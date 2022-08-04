@@ -2,17 +2,23 @@
 layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec2 uv;
 layout (location = 2) in vec3 in_color;
+layout (location = 3) in vec3 normal;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 tangentToWorld;
 
 out vec2 vertexUV;
+out vec3 vertexPos;
 out vec3 vertColor;
+out vec3 vertexNormalWorldSpace;
 
 void main()
 {
     gl_Position = projection * view * model * vec4(in_position, 1.0);
     vertexUV = uv;
     vertColor = in_color;
+    vertexPos = (model * vec4(in_position, 1.0)).xyz;
+    vertexNormalWorldSpace = mat3(tangentToWorld) * normal;
 }

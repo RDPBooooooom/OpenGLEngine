@@ -2,7 +2,10 @@
 
 namespace OpenGL.Game.Utils
 {
-    public class VaoUtil
+    /// <summary>
+    /// Streamlines the generation of a <see cref="VAO"/>
+    /// </summary>
+    public static class VaoUtil
     {
         public static VAO GetVao(Vector3[] vertices, uint[] indices, Vector3[] colors, ShaderProgram mat)
         {

@@ -11,11 +11,53 @@ namespace OpenGL.Game.WavefrontParser
 {
     public class ObjParser
     {
+        #region Private Fields
+
         private readonly List<ObjObject> _objList = new List<ObjObject>();
         private ObjObject _current;
 
         private readonly Dictionary<string, ObjMaterial> _materialLookup = new Dictionary<string, ObjMaterial>();
-        
+
+        private SmoothOptions _smoothOption = SmoothOptions.SmoothOff;
+
+        #endregion
+
+        /// <summary>
+        /// Parses a .obj file to a <see cref="List{T}"/> of <see cref="BaseComponent"/>. They are not added to the current scene yet.
+        /// </summary>
+        /// <param name="filepath">Path to the file</param>
+        /// <param name="filename">Name of the file including the extension</param>
+        /// <param name="mat">Shader to use for rendering the object</param>
+        /// <param name="objId">Id to identify the object</param>
+        /// <returns>List of BaseComponents generated from the file</returns>
+        /// <exception cref="IOException">If the file doesn't have a .obj Extension</exception>
+        public List<BaseComponent> ParseToGameObject(string filepath, string filename, ShaderProgram mat, Guid objId)
+        {
+            if (!filename.EndsWith(".obj")) throw new IOException("File doesn't have a .obj extension");
+
+            PreParseSetup();
+
+            List<BaseComponent> baseComponents = new List<BaseComponent>();
+            try
+            {
+                IEnumerable<string> lines = GetLines(filepath + filename);
+
+                int lineNumber = LoadData(lines, filepath);
+                ProcessData(lines, lineNumber);
+
+                baseComponents.Add(new RenderComponent(objId, GenerateComponentData(_current, mat)));
+                baseComponents.Add(new TransformComponent(objId));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+            return baseComponents;
+        }
+
+        #region Private Methods
 
         private void PreParseSetup()
         {
@@ -25,48 +67,19 @@ namespace OpenGL.Game.WavefrontParser
             _current = null;
         }
 
-        public List<BaseComponent> ParseToGameObject(string filepath, string filename, ShaderProgram mat, Guid objId)
-        {
-            if (!filename.EndsWith(".obj")) throw new IOException("File doesn't have a .obj extension");
-
-            PreParseSetup();
-
-            List<BaseComponent> baseComponents = new List<BaseComponent>();
-           try
-           {
-                IEnumerable<string> lines = GetLines(filepath + filename);
-
-                int lineNumber = LoadData(lines, filepath);
-                ProcessData(lines, lineNumber);
-
-                baseComponents.Add(new RenderComponent(objId, GenerateComponentData(_current, mat)));
-                baseComponents.Add(new TransformComponent(objId));
-           }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-
-            return baseComponents;
-        }
-        
-        public List<MeshRenderer> GenerateComponentData(ObjObject obj, ShaderProgram mat)
+        private List<MeshRenderer> GenerateComponentData(ObjObject obj, ShaderProgram mat)
         {
             List<MeshRenderer> renderers = new List<MeshRenderer>();
-            
+
+            obj.CheckForMerge();
+
             foreach (ObjData objData in obj.SubMeshData)
             {
-                Vector3[] colors = new Vector3[objData.Vertices.Count];
-                for (int i = 0; i < objData.Vertices.Count; i++)
-                {
-                    colors[i] = objData.Material.Color;
-                }
-                
-                VAO vao = VaoUtil.GetVao(objData.Vertices.ToArray(), objData.Indices.ToArray(), objData.VertexNormals.ToArray(), colors,
+                VAO vao = VaoUtil.GetVao(objData.Vertices.ToArray(), objData.Indices.ToArray(),
+                    objData.VertexNormals.ToArray(), objData.VertexColor.ToArray(),
                     objData.Uvs.ToArray(), mat);
 
-                MeshRenderer r = new MeshRenderer(mat, objData.Material.Texture, vao);
+                MeshRenderer r = new MeshRenderer(mat, objData.Material?.Texture, vao);
                 renderers.Add(r);
             }
 
@@ -81,7 +94,6 @@ namespace OpenGL.Game.WavefrontParser
 
             foreach (string line in lines)
             {
-                Console.WriteLine("Current Line: " + line);
                 string[] lineParts = line.Split(' ');
 
                 if (HandleData(lineParts, filepath)) break;
@@ -225,6 +237,9 @@ namespace OpenGL.Game.WavefrontParser
                     case "usemtl":
                         HandleUseMaterial(lineParts, ref subMeshData);
                         break;
+                    case "s":
+                        HandleSmooth(lineParts);
+                        break;
                     case "#":
                         break;
                     default:
@@ -232,12 +247,29 @@ namespace OpenGL.Game.WavefrontParser
                         break;
                 }
             }
+
             _current.AddSubMesh(subMeshData);
         }
-        
+
+        private void HandleSmooth(string[] lineParts)
+        {
+            switch (lineParts[1])
+            {
+                case "1":
+                    _smoothOption = SmoothOptions.SmoothOne;
+                    break;
+                case "off":
+                    _smoothOption = SmoothOptions.SmoothOff;
+                    break;
+                default:
+                    _smoothOption = SmoothOptions.SmoothOff;
+                    break;
+            }
+        }
+
         private void HandleUseMaterial(string[] lineParts, ref SubMeshObjData currentSubMeshData)
         {
-            if(currentSubMeshData != null) _current.AddSubMesh(currentSubMeshData);
+            if (currentSubMeshData != null) _current.AddSubMesh(currentSubMeshData);
 
             currentSubMeshData = new SubMeshObjData
             {
@@ -250,14 +282,14 @@ namespace OpenGL.Game.WavefrontParser
 
         private void HandleFace(string[] lineParts, SubMeshObjData currentSubMeshData)
         {
-            uint[] tempIndices = new uint[4];
-            int[] tempVertexNormals = new int[4];
-            int[] tempUvs = new int[4];
+            uint[] tempIndices = new uint[lineParts.Length - 1];
+            int[] tempVertexNormals = new int[lineParts.Length - 1];
+            int[] tempUvs = new int[lineParts.Length - 1];
 
             for (int i = 1; i < lineParts.Length; i++)
             {
-                string[] data =  lineParts[i].Split('/');
-                
+                string[] data = lineParts[i].Split('/');
+
                 tempIndices[i - 1] = uint.Parse(data[0]) - 1;
 
                 if (data[1] != "")
@@ -273,7 +305,7 @@ namespace OpenGL.Game.WavefrontParser
                 tempVertexNormals[i - 1] = int.Parse(data[2]) - 1;
             }
 
-            currentSubMeshData.AddData(tempIndices, tempUvs, tempVertexNormals, _current.Data);
+            currentSubMeshData.AddData(tempIndices, tempUvs, tempVertexNormals, _current.Data, _smoothOption);
         }
 
         #endregion
@@ -295,5 +327,13 @@ namespace OpenGL.Game.WavefrontParser
         }
 
         #endregion
+
+        #endregion
+    }
+
+    public enum SmoothOptions
+    {
+        SmoothOff,
+        SmoothOne
     }
 }

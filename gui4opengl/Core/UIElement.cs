@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-
-using OpenGL;
 using OpenGL.Platform;
 
 namespace OpenGL.UI

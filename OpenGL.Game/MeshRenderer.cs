@@ -1,9 +1,10 @@
-﻿using System;
-using OpenGL;
-using OpenGL.Game.Components.BasicComponents;
+﻿using OpenGL.Game.Components.BasicComponents;
 
 namespace OpenGL.Game
 {
+    /// <summary>
+    /// Takes care of Rendering a Mesh
+    /// </summary>
     public class MeshRenderer
     {
         #region Properties
@@ -18,12 +19,23 @@ namespace OpenGL.Game
 
         #region Constructor
 
+        /// <summary>
+        /// Initialize a mesh renderer that uses no texture
+        /// </summary>
+        /// <param name="material"><see cref="ShaderProgram"/> to render the mesh</param>
+        /// <param name="geometry"><see cref="VAO"/>Geometry information used to render the mesh</param>
         public MeshRenderer(ShaderProgram material, VAO geometry)
         {
             Material = material;
             Geometry = geometry;
         }
 
+        /// <summary>
+        /// Initialize a mesh renderer that uses a texture.
+        /// </summary>
+        /// <param name="material"><see cref="ShaderProgram"/> to render the mesh</param>
+        /// <param name="texture"><see cref="Texture"/> to use</param>
+        /// <param name="geometry"><see cref="VAO"/> Geometry information used to render the mesh</param>
         public MeshRenderer(ShaderProgram material, Texture texture, VAO geometry)
         {
             Material = material;
@@ -35,6 +47,15 @@ namespace OpenGL.Game
 
         #region Public Methods
 
+        /// <summary>
+        /// Renders the geometry given on the initialization
+        /// </summary>
+        /// <param name="model">Model <see cref="Matrix4"/> for this Object</param>
+        /// <param name="view">View <see cref="Matrix4"/> for the current Camera</param>
+        /// <param name="projection">Current Projection <see cref="Matrix4"/></param>
+        /// <param name="camera">Camera to base the light calculations on</param>
+        /// <param name="dirLight">Directional light to calculate with</param>
+        /// <param name="pointLights">Point lights to use for calculation. This should not exceed the maximum the shader is able to handle.</param>
         public void Render(Matrix4 model, Matrix4 view, Matrix4 projection, Camera camera, DirectionalLight dirLight,
             PointLightComponent[] pointLights)
         {
@@ -69,7 +90,7 @@ namespace OpenGL.Game
             Material["view"].SetValue(view);
             Material["model"].SetValue(model);
             Material["tangentToWorld"]?.SetValue(model.Inverse().Transpose());
-            Material["viewPos"]?.SetValue(camera.Transform.Position);
+            Material["viewPos"]?.SetValue(-camera.Transform.Position);
             Geometry.Draw();
         }
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using OpenGL.Platform;
+﻿using System.Collections.Generic;
 
 namespace OpenGL.UI
 {

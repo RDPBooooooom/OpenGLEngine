@@ -1,9 +1,4 @@
-﻿using System;
-
-using OpenGL;
-using OpenGL.Platform;
-
-namespace OpenGL.UI
+﻿namespace OpenGL.UI
 {
     public class Button : UIElement
     {

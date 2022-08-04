@@ -1,8 +1,5 @@
 ﻿using System;
 
-using OpenGL;
-using OpenGL.Platform;
-
 namespace OpenGL.UI
 {
     public class ListBox : UIContainer

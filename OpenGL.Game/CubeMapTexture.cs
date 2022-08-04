@@ -1,11 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 
 namespace OpenGL.Game
 {
+    /// <summary>
+    ///  Can be used to load a cube map texture. Needs to be disposed when not used anymore.
+    /// </summary>
     public class CubeMapTexture : IDisposable
     {
         #region Propreties
@@ -60,12 +62,6 @@ namespace OpenGL.Game
             Gl.BindTexture(TextureTarget, 0);
         }
 
-
-        ~CubeMapTexture()
-        {
-            Dispose(false);
-        }
-
         #endregion
 
         #region Methods
@@ -74,6 +70,11 @@ namespace OpenGL.Game
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+        
+        ~CubeMapTexture()
+        {
+            Dispose(false);
         }
 
         protected virtual void Dispose(bool disposing)

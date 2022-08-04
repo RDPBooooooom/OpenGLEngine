@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenGL.Game.Math;
 
 namespace OpenGL.Game.Components.BasicComponents
 {
@@ -12,7 +11,7 @@ namespace OpenGL.Game.Components.BasicComponents
 
         public Vector3 Scale { get; set; } = Vector3.One;
         
-        public Vector3 Rotation { get; set; } = Vector3.Zero;
+        public Quaternion Rotation { get; set; } = Quaternion.Identity;
 
         #endregion
 
@@ -28,7 +27,7 @@ namespace OpenGL.Game.Components.BasicComponents
 
         private Matrix4 GetRotationMatrix()
         {
-            return RotationUtils.ToQ(Rotation).Matrix4;
+            return Rotation.Matrix4;
         }
 
         /// <summary>

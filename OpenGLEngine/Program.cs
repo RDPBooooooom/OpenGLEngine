@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
 using OpenGL;
 using OpenGL.Game;
 using OpenGL.Game.Components.BasicComponents;
 using OpenGL.Game.GameObjectFactories;
+using OpenGL.Game.Math;
 using OpenGL.Game.Utils;
-using OpenGL.Game.WavefrontParser;
 using OpenGL.Platform;
 
 namespace OpenGLEngine
 {
     internal static class Program
     {
-        private static int width = 800;
-        private static int height = 600;
+        private static int width = 1920;
+        private static int height = 1080;
 
         private static Game game;
         private static Camera camera;
@@ -31,8 +30,9 @@ namespace OpenGLEngine
                 ScreenWidth = width,
                 ScreenHeight = height
             };
-            DirectionalLight dirLight = new DirectionalLight(new Vector3(0, 0, -1), new Vector3(1, 1, 1) * 0.2f,
-                new Vector3(1, 1, 1) * 2, new Vector3(1, 1, 1) * 4);
+            DirectionalLight dirLight = new DirectionalLight(new Vector3(0, 1, -1).Normalize(),
+                new Vector3(1, 1, 1) * 0.2f,
+                new Vector3(1, 1, 1) * 0.8f, new Vector3(1, 1, 1) * 1f);
 
             game = Game.Instance;
             game.CurrentProjection = GetProjectionMatrix;
@@ -40,7 +40,7 @@ namespace OpenGLEngine
             game.CurrentDirLight = dirLight;
 
             Time.Init();
-            Window.CreateWindow("OpenGLEngine Alpha Alpha", width, height);
+            Window.CreateWindow("OpenGLEngine Alpha", width, height);
 
             // add a reshape callback to update the UI
             Window.OnReshapeCallbacks.Add(OnResize);
@@ -54,10 +54,16 @@ namespace OpenGLEngine
 
             Gl.Enable(EnableCap.TextureCubeMapSeamless);
 
+            #region Textures
+
             //Load texture files
             Texture crateTexture = new Texture(TexturePath + "crate.jpg");
             Gl.ActiveTexture(0);
             Gl.BindTexture(crateTexture);
+
+            Texture groundTexture = new Texture(TexturePath + "Ground.jpg");
+            Gl.ActiveTexture(0);
+            Gl.BindTexture(groundTexture);
 
             Texture brickTexture = new Texture(TexturePath + "brick.jpg");
             Gl.ActiveTexture(0);
@@ -74,6 +80,10 @@ namespace OpenGLEngine
             };
             CubeMapTexture cmt = new CubeMapTexture(skyboxTexture);
 
+            #endregion
+
+            #region Shader
+
             ShaderProgram skyboxMat =
                 new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "SkyboxVert.vs", ShaderType.VertexShader),
                     ShaderUtil.CreateShader(ShaderPath + "SkyboxFrag.fs", ShaderType.FragmentShader));
@@ -83,11 +93,14 @@ namespace OpenGLEngine
                     ShaderUtil.CreateShader(ShaderPath + "ObjFrag.fs", ShaderType.FragmentShader));
             objMaterial["color"]?.SetValue(new Vector3(1, 1, 1));
 
-            /*ShaderProgram objNoTextureMaterial =
-                new ShaderProgram(ShaderUtil.CreateShader(ShaderPath + "\\NoTexture\\ObjVert.vs", ShaderType.VertexShader),
+            ShaderProgram objNoTextureMaterial =
+                new ShaderProgram(
+                    ShaderUtil.CreateShader(ShaderPath + "\\NoTexture\\ObjVert.vs", ShaderType.VertexShader),
                     ShaderUtil.CreateShader(ShaderPath + "\\NoTexture\\ObjFrag.fs", ShaderType.FragmentShader));
             objMaterial["color"]?.SetValue(new Vector3(1, 1, 1));
-            */
+
+            #endregion
+
             SwapPolygonModeFill();
 
             //Create game object
@@ -95,69 +108,201 @@ namespace OpenGLEngine
             Skybox box = new Skybox(cmt, skyboxMat);
             game.Skybox = box;
 
-            CubeGameObjectFactory cubeFactory = new CubeGameObjectFactory();
-            Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
-            Guid obj2 = cubeFactory.Create(objMaterial, crateTexture);
+            // Adjust Camera over ground level
+            camera.Transform.Position = new Vector3(0, -2, 0);
 
-            WavefrontFactory wavefrontFactory = new WavefrontFactory(ObjPath, "cube.obj");
-            //Guid objTest1 = wavefrontFactory.Create(objNoTextureMaterial, null);
-
-            wavefrontFactory.ChangePath(ObjPath + "Complex\\", "Head_1.obj");
-            //Guid objTest2 = wavefrontFactory.Create(objNoTextureMaterial, null);
-
-            wavefrontFactory.ChangePath(ObjPath + "Plane\\", "Plane.obj");
-            Guid objTest3 = wavefrontFactory.Create(objMaterial, null);
-
-            game.FindComponent<TransformComponent>(obj2).Position = new Vector3(0f, 0, -10);
-            game.FindComponent<TransformComponent>(obj1).Position = new Vector3(-5f, 0, -10);
-            game.FindComponent<TransformComponent>(obj1).Rotation = new Vector3(0, 0, 45);
-            game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(2, 2, 2);
-            //game.FindComponent<TransformComponent>(objTest2).Position = new Vector3(-5f, 5, -10);
-            game.FindComponent<TransformComponent>(objTest3).Position = new Vector3(-20f, 0, -10);
-
-            for (int i = 0; i < 100; i++)
+            // Create Ground
+            GroundFactory groundFactory = new GroundFactory();
+            for (int i = 0; i < 40; i++)
             {
-                for (int u = 0; u < 10; u++)
+                float zPos = i * 5f - 100;
+                for (int j = 0; j < 40; j++)
                 {
-                    Guid id = cubeFactory.Create(objMaterial, crateTexture);
-                    game.FindComponent<TransformComponent>(id).Position = new Vector3(u * 2f, i + 2, -10f);
+                    Guid tempGround = groundFactory.Create(objMaterial, groundTexture);
+                    game.FindComponent<TransformComponent>(tempGround).Position = new Vector3(j * 5f - 100, 0, zPos);
                 }
             }
 
-            Random random = new Random();
+            // Spawn Bouncing Spheres 
+            PhysicsWavefrontFactory phyWavefrontFactory =
+                new PhysicsWavefrontFactory(ObjPath + "Sphere\\", "IcoSphere.obj", 1f, 5);
+            Guid sphere = phyWavefrontFactory.Create(objNoTextureMaterial, null);
+            game.FindComponent<TransformComponent>(sphere).Position = new Vector3(0, 50, -7.5f);
+
+            Guid sphere2 = phyWavefrontFactory.Create(objNoTextureMaterial, null);
+            game.FindComponent<TransformComponent>(sphere2).Position = new Vector3(0, 60, -10f);
+
+            CubeGameObjectFactory cubeFactory = new CubeGameObjectFactory();
+            // Create cube
+            Guid obj2 = cubeFactory.Create(objMaterial, crateTexture);
+            game.FindComponent<TransformComponent>(obj2).Position = new Vector3(-10f, 1, -10);
+
+            #region Walls
+
+            // Right Wall
+            Vector2 lastPosRight = Vector2.Zero;
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
+                    lastPosRight = new Vector2(-11.5f - i * 5, 1 + j * 5);
+                    game.FindComponent<TransformComponent>(obj1).Position =
+                        new Vector3(lastPosRight.X, lastPosRight.Y, 40);
+                    game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(5, 5, 5);
+                }
+            }
+
+            Vector2 lastPosLeft = Vector2.Zero;
+            // Left Wall
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
+                    lastPosLeft = new Vector2(10.5f + i * 5, 1 + j * 5);
+                    game.FindComponent<TransformComponent>(obj1).Position =
+                        new Vector3(lastPosLeft.X, lastPosLeft.Y, 40);
+                    game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(5, 5, 5);
+                }
+            }
+
+            // Extend Left
+            Vector2 lastExtendLeft = Vector2.Zero;
             for (int i = 0; i < 20; i++)
             {
-                for (int j = 0; j < 5; j++)
+                for (int j = 0; j < 2; j++)
                 {
-                    // Add PointLights to scene
-                    PointLightFactory pointLightFactory = new PointLightFactory();
-                    Guid pointLight = pointLightFactory.Create(null, null);
-                    game.FindComponent<TransformComponent>(pointLight).Position = new Vector3(4f * j, 12f * i, -8);
-                    Vector3 ranColor = new Vector3((float) random.NextDouble(), (float) random.NextDouble(),
-                        (float) random.NextDouble());
-                    PointLightComponent c = game.FindComponent<PointLightComponent>(pointLight);
-                    LightData data = c.LightData;
-                    data.AmbientColor = ranColor;
-                    data.DiffuseColor = ranColor;
-                    data.SpecularColor = ranColor;
-                    c.LightData = data;
+                    Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
+                    lastExtendLeft = new Vector2(1 + j * 5, 35 - i * 5);
+                    game.FindComponent<TransformComponent>(obj1).Position =
+                        new Vector3(lastPosLeft.X + 5, lastExtendLeft.X, lastExtendLeft.Y);
+                    game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(5, 5, 5);
                 }
             }
+
+            // Extend Right
+            Vector2 lastExtendRight = Vector2.Zero;
+            for (int i = 0; i < 20; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
+                    lastExtendRight = new Vector2(1 + j * 5, 35 - i * 5);
+                    game.FindComponent<TransformComponent>(obj1).Position =
+                        new Vector3(lastPosRight.X - 5, lastExtendRight.X, lastExtendRight.Y);
+                    game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(5, 5, 5);
+                }
+            }
+
+            // Close Left
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
+                    game.FindComponent<TransformComponent>(obj1).Position =
+                        new Vector3(lastPosRight.X + i * 5, 1 + j * 5, lastExtendRight.Y - 5);
+                    game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(5, 5, 5);
+                }
+            }
+
+            // Close Right
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    Guid obj1 = cubeFactory.Create(objMaterial, brickTexture);
+                    game.FindComponent<TransformComponent>(obj1).Position =
+                        new Vector3(lastPosLeft.X - i * 5, 1 + j * 5, lastExtendLeft.Y - 5);
+                    game.FindComponent<TransformComponent>(obj1).Scale = new Vector3(5, 5, 5);
+                }
+            }
+
+            #endregion
+
+            // Spawn Horn
+            WavefrontFactory wavefrontFactory = new WavefrontFactory(ObjPath + "Tower\\", "Tower.obj");
             
+            #region Towers
+
+            // Left Back
+            Guid towerLB = wavefrontFactory.Create(objMaterial, null);
+            game.FindComponent<TransformComponent>(towerLB).Position = new Vector3(lastPosLeft.X + 5, 0.5f, 40 + 2.5f);
+            game.FindComponent<TransformComponent>(towerLB).Scale = new Vector3(1.1f, 1, 1.1f);
+
+            // Left Front
+            Guid towerLF = wavefrontFactory.Create(objMaterial, null);
+            game.FindComponent<TransformComponent>(towerLF).Position =
+                new Vector3(lastPosLeft.X + 5, 0.5f, lastExtendLeft.Y - 2.5f);
+            game.FindComponent<TransformComponent>(towerLF).Scale = new Vector3(1.1f, 1, 1.1f);
+
+            // Right Back
+            Guid towerRB = wavefrontFactory.Create(objMaterial, null);
+            game.FindComponent<TransformComponent>(towerRB).Position = new Vector3(lastPosRight.X - 5, 0.5f, 40 + 2.5f);
+            game.FindComponent<TransformComponent>(towerRB).Scale = new Vector3(1.1f, 1, 1.1f);
+
+            // Right Front
+            Guid towerRF = wavefrontFactory.Create(objMaterial, null);
+            game.FindComponent<TransformComponent>(towerRF).Position =
+                new Vector3(lastPosRight.X - 5, 0.5f, lastExtendRight.Y - 2.5f);
+            game.FindComponent<TransformComponent>(towerRF).Scale = new Vector3(1.1f, 1, 1.1f);
+
+            #endregion
+
+            // Gate
+            wavefrontFactory.ChangePath(ObjPath + "Gate\\", "Gate.obj");
+            Guid gate = wavefrontFactory.Create(objMaterial, null);
+            game.FindComponent<TransformComponent>(gate).Position = new Vector3(-0.5f, 0.5f, lastExtendRight.Y);
+            game.FindComponent<TransformComponent>(gate).Rotation = RotationUtils.ToQ(new Vector3(0, 180, 0));
+            game.FindComponent<TransformComponent>(gate).Scale = new Vector3(1.1f, 1, 1.1f);
+
+            // Spawn Castle
+            wavefrontFactory.ChangePath(ObjPath + "Castle\\", "Castle.obj");
+            Guid wall = wavefrontFactory.Create(objNoTextureMaterial, null);
+            game.FindComponent<TransformComponent>(wall).Position = new Vector3(0, 0.5f, 50);
+            game.FindComponent<TransformComponent>(wall).Rotation = RotationUtils.ToQ(new Vector3(0, 180, 0));
+
+            // Church
+            wavefrontFactory.ChangePath(ObjPath + "Church\\", "Church.obj");
+            Guid church = wavefrontFactory.Create(objMaterial, null);
+            game.FindComponent<TransformComponent>(church).Position = new Vector3(-20, 0.6f, 20);
+            game.FindComponent<TransformComponent>(church).Rotation = RotationUtils.ToQ(new Vector3(0, 270, 0));
+
+            #region Lights
+
+            Random random = new Random();
+            PointLightFactory pointLightFactory = new PointLightFactory();
+
+            Guid lightOne = pointLightFactory.Create(null, null);
+            SetRandomLightData(random, lightOne);
+            game.FindComponent<TransformComponent>(lightOne).Position = new Vector3(0, 5, 0);
+
+            Guid lightTwo = pointLightFactory.Create(null, null);
+            SetRandomLightData(random, lightTwo);
+            game.FindComponent<TransformComponent>(lightTwo).Position = new Vector3(45, 5, 30);
+
+            Guid lightThree = pointLightFactory.Create(null, null);
+            SetRandomLightData(random, lightThree);
+            game.FindComponent<TransformComponent>(lightThree).Position = new Vector3(-45, 5, 30);
+
+            Guid lightFour = pointLightFactory.Create(null, null);
+            SetRandomLightData(random, lightFour);
+            game.FindComponent<TransformComponent>(lightFour).Position = new Vector3(45, 5, -40);
+
+            Guid lightFive = pointLightFactory.Create(null, null);
+            SetRandomLightData(random, lightFive);
+            game.FindComponent<TransformComponent>(lightFive).Position = new Vector3(-45, 5, -40);
+
+            #endregion
+
             // Hook to the escape press event using the OpenGL.UI class library
             Input.Subscribe((char) Keys.Escape, Window.OnClose);
-
-            Input.Subscribe('f', SwapPolygonModeFill);
-            Input.Subscribe('l', SwapPolygonModeLine);
 
             // Make sure to set up mouse event handlers for the window
             Window.OnMouseCallbacks.Add(global::OpenGL.UI.UserInterface.OnMouseClick);
             Window.OnMouseMoveCallbacks.Add(global::OpenGL.UI.UserInterface.OnMouseMove);
 
-            int frames = 0;
-            float time = 0;
-            float lastTime = 0;
-            
             // Game loop
             while (Window.Open)
             {
@@ -174,16 +319,21 @@ namespace OpenGLEngine
                 OnPostRenderFrame();
 
                 Time.Update();
-                
-                frames++;
-                time += Time.DeltaTime;
-                if (time - lastTime > 1)
-                {
-                    Console.WriteLine(1000.0d/frames);
-                    frames = 0;
-                    lastTime++;
-                }
             }
+        }
+
+        private static void SetRandomLightData(Random random, Guid light)
+        {
+            PointLightComponent c = game.FindComponent<PointLightComponent>(light);
+            LightData data = c.LightData;
+
+            Vector3 ranColor = new Vector3((float) random.NextDouble(), (float) random.NextDouble(),
+                (float) random.NextDouble());
+
+            data.AmbientColor = ranColor;
+            data.DiffuseColor = ranColor;
+            data.SpecularColor = ranColor;
+            c.LightData = data;
         }
 
         #region Transformation
@@ -202,11 +352,6 @@ namespace OpenGLEngine
         #endregion
 
         #region Callbacks
-
-        private static void SwapPolygonModeLine()
-        {
-            Gl.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-        }
 
         private static void SwapPolygonModeFill()
         {

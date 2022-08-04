@@ -1,0 +1,16 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl atlas_LPUP.002
+Ns 179.999996
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.220000 0.220000 0.220000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd atlas-albedo-LPUP.png
+map_Ke atlas-emission-LPUP.png
+map_Ks atlas-specular-LPUP.png
+map_d atlas-albedo-LPUP.png

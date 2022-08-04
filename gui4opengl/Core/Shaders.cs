@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 
-using OpenGL;
-
 namespace OpenGL.UI
 {
     internal static class Shaders
